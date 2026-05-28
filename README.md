@@ -45,7 +45,7 @@ copy .env.example .env
 4. [Streamlit Cloud](https://share.streamlit.io)에 `app.py` 배포 → URL 공유
 5. 앱 **「팀 공유 (GitHub)」** 탭에서 확인
 
-### 웹 UI — 플레이스 (로컬)
+### 웹 UI (로컬)
 
 키워드 + 플레이스 URL로 순위를 조회하거나, 최대 **20개** 업체를 등록해 모니터링합니다.
 
@@ -53,26 +53,9 @@ copy .env.example .env
 streamlit run app.py
 ```
 
-### 웹 UI — 블로그 순위 체커 (로컬)
-
-블로그 홈 URL을 최대 **100개** 등록하고, 게시글별 키워드(최대 4개) 순위를 확인합니다.
-
-```powershell
-streamlit run blog_app.py
-```
-
-**Supabase 마이그레이션:** SQL Editor에서 [`supabase/blog_schema.sql`](supabase/blog_schema.sql) 실행 (또는 [`supabase/schema.sql`](supabase/schema.sql) 전체 실행)
-
-**블로그 UI 기능**
-- 통합 리스트: 번호 · URL · 제목 · 광고주 · 순위 뱃지 · 삭제 · 펼치기
-- 펼침: 최근 게시글 40개, 키워드 4열 가로 배치
-- 검색 기준: 통합검색 / 블로그탭 (전역·블로그별)
-- 순위: 광고 제외 자연 노출, 최대 50위
-- 엑셀 저장 지원
-
 브라우저에서 `http://localhost:8501` 이 열립니다. 자동으로 안 열리면 주소를 직접 입력하세요.
 
-**플레이스 UI 기능**
+**UI 기능**
 - **좌측**: 키워드·URL 입력 → [등록] 또는 [순위 조회]
 - **우측**: 등록 업체 목록 (업체명 · 키워드 · 순위)
 - **✕ 버튼**: 등록 해제
@@ -104,13 +87,15 @@ powershell -ExecutionPolicy Bypass -File scripts/install_scheduler.ps1
 
 네이버 이용약관 및 robots 정책을 확인하세요. 개인/내부 모니터링 용도로 **하루 1~2회** 저빈도 실행을 권장합니다.
 
+## 관련 저장소
+
+블로그 키워드 순위 체커: [github.com/trendmarkhyun/naver-blog-rank](https://github.com/trendmarkhyun/naver-blog-rank)
+
 ## 프로젝트 구조
 
 ```
 config/targets.yaml   # 업체·키워드 설정 (CLI용)
 app.py                # Streamlit 플레이스 순위 UI
-blog_app.py           # Streamlit 블로그 키워드 순위 UI
-supabase/blog_schema.sql  # 블로그 테이블 마이그레이션
 data/watchlist.json   # UI 등록 업체 (자동 생성)
 src/                  # 수집·저장·조회 로직
 scripts/              # CLI 및 스케줄러 설치

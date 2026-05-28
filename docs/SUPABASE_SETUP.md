@@ -16,8 +16,7 @@ GitHub Actions (30분) → Playwright 순위 수집 → Supabase 갱신
 
 1. [supabase.com](https://supabase.com) → New project (Seoul)
 2. **SQL Editor** → [`supabase/schema.sql`](../supabase/schema.sql) 실행
-3. 블로그 순위 체커 사용 시 → [`supabase/blog_schema.sql`](../supabase/blog_schema.sql) 추가 실행 (또는 schema.sql에 포함됨)
-4. **Project Settings → API** 에서 복사:
+3. **Project Settings → API** 에서 복사:
    - `Project URL` → `SUPABASE_URL`
    - `service_role` key → `SUPABASE_SERVICE_KEY`
 
@@ -56,12 +55,6 @@ TEAM_ACCESS_CODE = "trend2026"
 ```
 
 5. Deploy → `https://naver-place-rank.streamlit.app` 같은 URL 생성
-
-**블로그 순위 체커 (별도 앱)**
-
-- Main file: `blog_app.py`
-- 동일 Supabase·Secrets 사용
-- 별도 Streamlit Cloud 앱으로 배포해 URL 분리
 
 ---
 

@@ -27,5 +27,3 @@ create table if not exists watchlist_items (
 
 create index if not exists idx_watchlist_member on watchlist_items(member_id);
 create index if not exists idx_watchlist_keyword on watchlist_items(keyword);
-
--- 블로그 순위 체커 (blog_app.py)는 supabase/blog_schema.sql 을 별도 실행하세요.
