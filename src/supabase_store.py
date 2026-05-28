@@ -6,6 +6,7 @@ import os
 import uuid
 from dataclasses import dataclass
 
+from postgrest.exceptions import APIError
 from supabase import Client, create_client
 
 from src.place_url import PlaceUrlError, parse_place_url
@@ -50,8 +51,34 @@ class SupabaseStore:
     def __init__(self, client: Client | None = None) -> None:
         self.client = client or get_client()
 
-    def upsert_member(self, display_name: str, team_code: str) -> Member:
-        existing = (
+    @staticmethod
+    def _member_from_row(row: dict) -> Member:
+        return Member(
+            id=str(row["id"]),
+            display_name=str(row["display_name"]),
+            team_code=str(row["team_code"]),
+            max_rank=int(row.get("max_rank") or 50),
+        )
+
+    @staticmethod
+    def _wrap_db_error(exc: Exception) -> SupabaseStoreError:
+        if isinstance(exc, APIError):
+            message = str(exc)
+            lowered = message.lower()
+            if "max_rank" in lowered or "42703" in message:
+                return SupabaseStoreError(
+                    "members 테이블에 max_rank 컬럼이 없습니다. "
+                    "Supabase SQL Editor에서 supabase/schema.sql을 다시 실행해 주세요."
+                )
+            if "23505" in message or "duplicate" in lowered or "unique" in lowered:
+                return SupabaseStoreError(
+                    "이미 등록된 팀원입니다. 잠시 후 다시 시도해 주세요."
+                )
+            return SupabaseStoreError(f"Supabase 오류: {message}")
+        return SupabaseStoreError(str(exc))
+
+    def _fetch_member_row(self, display_name: str, team_code: str) -> dict | None:
+        response = (
             self.client.table("members")
             .select("*")
             .eq("display_name", display_name)
@@ -59,36 +86,46 @@ class SupabaseStore:
             .limit(1)
             .execute()
         )
-        rows = existing.data or []
-        if rows:
-            row = rows[0]
-            return Member(
-                id=str(row["id"]),
-                display_name=str(row["display_name"]),
-                team_code=str(row["team_code"]),
-                max_rank=int(row.get("max_rank") or 50),
-            )
+        rows = response.data or []
+        return rows[0] if rows else None
 
-        inserted = (
-            self.client.table("members")
-            .insert(
-                {
-                    "display_name": display_name,
-                    "team_code": team_code,
-                    "max_rank": 50,
-                }
+    def upsert_member(self, display_name: str, team_code: str) -> Member:
+        display_name = display_name.strip()
+        team_code = team_code.strip()
+
+        existing = self._fetch_member_row(display_name, team_code)
+        if existing:
+            return self._member_from_row(existing)
+
+        try:
+            inserted = (
+                self.client.table("members")
+                .insert(
+                    {
+                        "display_name": display_name,
+                        "team_code": team_code,
+                    }
+                )
+                .execute()
             )
-            .execute()
-        )
-        if not inserted.data:
-            raise SupabaseStoreError("팀원 등록에 실패했습니다.")
-        row = inserted.data[0]
-        return Member(
-            id=str(row["id"]),
-            display_name=str(row["display_name"]),
-            team_code=str(row["team_code"]),
-            max_rank=int(row.get("max_rank") or 50),
-        )
+            if inserted.data:
+                return self._member_from_row(inserted.data[0])
+        except APIError as exc:
+            existing = self._fetch_member_row(display_name, team_code)
+            if existing:
+                return self._member_from_row(existing)
+            raise self._wrap_db_error(exc) from exc
+        except Exception as exc:
+            existing = self._fetch_member_row(display_name, team_code)
+            if existing:
+                return self._member_from_row(existing)
+            raise self._wrap_db_error(exc) from exc
+
+        existing = self._fetch_member_row(display_name, team_code)
+        if existing:
+            return self._member_from_row(existing)
+
+        raise SupabaseStoreError("팀원 등록에 실패했습니다.")
 
     def update_member_max_rank(self, member_id: str, max_rank: int) -> None:
         self.client.table("members").update({"max_rank": max_rank}).eq("id", member_id).execute()

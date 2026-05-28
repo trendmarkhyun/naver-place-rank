@@ -9,6 +9,7 @@ create table if not exists members (
   unique (display_name, team_code)
 );
 
+alter table members add column if not exists max_rank int not null default 50;
 create table if not exists watchlist_items (
   id uuid primary key default gen_random_uuid(),
   member_id uuid not null references members(id) on delete cascade,

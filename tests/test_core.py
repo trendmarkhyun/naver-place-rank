@@ -396,6 +396,73 @@ class TeamConfigTests(unittest.TestCase):
             self.assertEqual(loaded.refreshed_by, "test")
 
 
+class SupabaseStoreTests(unittest.TestCase):
+    def test_upsert_member_returns_existing_row(self) -> None:
+        from unittest.mock import MagicMock
+
+        from src.supabase_store import SupabaseStore
+
+        client = MagicMock()
+        table = MagicMock()
+        client.table.return_value = table
+        select_chain = MagicMock()
+        select_chain.execute.return_value = MagicMock(
+            data=[
+                {
+                    "id": "member-1",
+                    "display_name": "김민수",
+                    "team_code": "trend2026",
+                    "max_rank": 80,
+                }
+            ]
+        )
+        table.select.return_value.eq.return_value.eq.return_value.limit.return_value = (
+            select_chain
+        )
+
+        member = SupabaseStore(client=client).upsert_member("김민수", "trend2026")
+        self.assertEqual(member.id, "member-1")
+        self.assertEqual(member.max_rank, 80)
+        table.insert.assert_not_called()
+
+    def test_upsert_member_recovers_after_duplicate_insert(self) -> None:
+        from unittest.mock import MagicMock
+
+        from postgrest.exceptions import APIError
+
+        from src.supabase_store import SupabaseStore
+
+        client = MagicMock()
+        table = MagicMock()
+        client.table.return_value = table
+
+        empty_select = MagicMock()
+        empty_select.execute.return_value = MagicMock(data=[])
+
+        found_select = MagicMock()
+        found_select.execute.return_value = MagicMock(
+            data=[
+                {
+                    "id": "member-2",
+                    "display_name": "안동현",
+                    "team_code": "trend2026",
+                    "max_rank": 50,
+                }
+            ]
+        )
+
+        table.select.return_value.eq.return_value.eq.return_value.limit.side_effect = [
+            empty_select,
+            found_select,
+        ]
+        table.insert.return_value.execute.side_effect = APIError(
+            {"message": "duplicate key value violates unique constraint", "code": "23505"}
+        )
+
+        member = SupabaseStore(client=client).upsert_member("안동현", "trend2026")
+        self.assertEqual(member.id, "member-2")
+
+
 class StorageTests(unittest.TestCase):
     def test_save_and_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
