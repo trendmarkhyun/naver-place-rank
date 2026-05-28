@@ -1,5 +1,5 @@
 {
-  "refreshed_at": "2026-05-29T02:52:11+09:00",
+  "refreshed_at": "2026-05-29T08:02:37+09:00",
   "refreshed_by": "github-actions",
   "max_rank": 50,
   "items": [
@@ -10,10 +10,10 @@
       "place_name": "도원반점 강남역직영점",
       "keyword": "강남역 맛집",
       "rank": 1,
-      "prev_rank": null,
+      "prev_rank": 1,
       "found": true,
-      "changed": true,
-      "updated_at": "2026-05-29T02:52:04+09:00"
+      "changed": false,
+      "updated_at": "2026-05-29T08:02:32+09:00"
     },
     {
       "id": "56d1192287d829bd",
@@ -22,10 +22,10 @@
       "place_name": "언플러그드 라운지",
       "keyword": "홍대 카페",
       "rank": 2,
-      "prev_rank": null,
+      "prev_rank": 2,
       "found": true,
-      "changed": true,
-      "updated_at": "2026-05-29T02:52:04+09:00"
+      "changed": false,
+      "updated_at": "2026-05-29T08:02:32+09:00"
     }
   ]
 }
