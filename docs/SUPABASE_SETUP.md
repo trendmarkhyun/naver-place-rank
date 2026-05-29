@@ -62,8 +62,9 @@ TEAM_ACCESS_CODE = "trend2026"
 
 1. Streamlit URL 접속
 2. **이름** + **팀원코드** 로그인 (팀원코드는 관리자가 `TEAM_ACCESS_CODE`로 설정)
-3. 키워드 + 플레이스 URL → **등록**
-4. 30분 이내 순위 자동 갱신 (또는 Actions 수동 실행)
+3. 키워드 + 플레이스 URL → **등록** (순위는 Actions 갱신 후 표시)
+4. **순위 조회** → 내 등록 목록에 저장된 순위 확인
+5. 30분 이내 순위 자동 갱신 (또는 Actions 수동 실행)
 
 ---
 
@@ -73,7 +74,7 @@ TEAM_ACCESS_CODE = "trend2026"
 cd C:\Users\User\naver-place-rank
 copy .streamlit\secrets.toml.example .streamlit\secrets.toml
 # secrets.toml 편집
-pip install -r requirements.txt
+pip install -r requirements-streamlit.txt
 streamlit run app.py
 ```
 

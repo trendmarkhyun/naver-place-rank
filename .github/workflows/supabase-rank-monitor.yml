@@ -22,7 +22,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-actions.txt
           playwright install chromium --with-deps
 
       - name: Refresh Supabase rankings

@@ -1,5 +1,2 @@
-playwright>=1.40.0
-pyyaml>=6.0.1
-python-dotenv>=1.0.0
-streamlit>=1.33.0
-supabase>=2.4.0,<2.11.0
+# Streamlit Cloud용 (Playwright 없음 — 순위 수집은 GitHub Actions)
+-r requirements-streamlit.txt

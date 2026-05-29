@@ -463,6 +463,41 @@ class SupabaseStoreTests(unittest.TestCase):
         self.assertEqual(member.id, "member-2")
 
 
+    def test_list_items_filters_by_member(self) -> None:
+        from unittest.mock import MagicMock
+
+        from src.supabase_store import SupabaseStore
+
+        client = MagicMock()
+        table = MagicMock()
+        client.table.return_value = table
+
+        member_a_chain = MagicMock()
+        member_a_chain.execute.return_value = MagicMock(
+            data=[
+                {
+                    "id": "item-a",
+                    "member_id": "member-a",
+                    "place_id": "111",
+                    "place_url": "https://map.naver.com/p/entry/place/111",
+                    "place_name": "A업체",
+                    "keyword": "키워드A",
+                    "rank": 3,
+                    "prev_rank": None,
+                    "found": True,
+                    "changed": False,
+                    "updated_at": "2026-05-28T10:00:00+09:00",
+                }
+            ]
+        )
+        table.select.return_value.eq.return_value.order.return_value = member_a_chain
+
+        items = SupabaseStore(client=client).list_items("member-a")
+        self.assertEqual(len(items), 1)
+        self.assertEqual(items[0].place_name, "A업체")
+        table.select.return_value.eq.assert_called_with("member_id", "member-a")
+
+
 class StorageTests(unittest.TestCase):
     def test_save_and_export(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -52,7 +52,10 @@ async def refresh_all(refreshed_by: str) -> int:
             for keyword, entries in keyword_groups.items():
                 max_rank = max(e[2] for e in entries)
                 logger.info("키워드 '%s' (%d개 항목, max_rank=%d)", keyword, len(entries), max_rank)
-                results = await search_keyword_results(page, keyword, max_rank)
+                sample_url = entries[0][1].place_url
+                results = await search_keyword_results(
+                    page, keyword, max_rank, place_url=sample_url
+                )
 
                 for member_id, item, _ in entries:
                     business = Business(

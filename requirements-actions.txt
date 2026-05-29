@@ -1,0 +1,3 @@
+-r requirements-streamlit.txt
+playwright>=1.40.0
+pyyaml>=6.0.1

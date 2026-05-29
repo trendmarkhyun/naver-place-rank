@@ -1,40 +1,16 @@
-name: Team Rank Monitor
+# Supabase Rank Monitor(supabase-rank-monitor.yml)로 대체됨.
+# 필요 시 수동 실행만 허용 (JSON commit 방식 비활성).
+
+name: Team Rank Monitor (legacy)
 
 on:
-  schedule:
-    # 30분마다 갱신 (GitHub Actions + Playwright 부하 고려)
-    - cron: "*/30 * * * *"
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
-  refresh:
+  disabled:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: Install dependencies
+      - name: Use Supabase workflow instead
         run: |
-          pip install -r requirements.txt
-          playwright install chromium --with-deps
-
-      - name: Refresh team rankings
-        run: python scripts/refresh_team_rankings.py --by github-actions
-
-      - name: Commit rankings if changed
-        uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "chore: update team rankings [skip ci]"
-          file_pattern: data/team_rankings.json
-          branch: ${{ github.ref_name }}
+          echo "이 워크플로는 비활성화되었습니다."
+          echo "Actions → Supabase Rank Monitor 를 사용하세요."

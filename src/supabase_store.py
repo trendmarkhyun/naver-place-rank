@@ -247,6 +247,10 @@ class SupabaseStore:
         for item in items:
             self.update_item(item)
 
+    def update_item_ranks(self, items: list[WatchlistItem]) -> None:
+        """GitHub Actions용 일괄 순위 저장 (plan API alias)."""
+        self.refresh_member_items(items)
+
     def find_item(self, member_id: str, place_id: str, keyword: str) -> WatchlistItem | None:
         response = (
             self.client.table("watchlist_items")
