@@ -47,6 +47,32 @@ st.markdown(
         border: 1px solid #e8ece9; border-radius: 10px;
         padding: 0.65rem 0.75rem; margin-bottom: 0.5rem; background: #fff;
     }
+    .watch-card {
+        border: 1px solid #e8ece9; border-radius: 10px;
+        padding: 0.55rem 0.6rem 0.65rem; margin-bottom: 0.65rem;
+        background: #fff; min-height: 132px;
+    }
+    .watch-card.changed { background: #fffbe6; border-color: #f0d96b; }
+    .watch-card .watch-name {
+        font-weight: 600; color: #222; font-size: 0.88rem;
+        line-height: 1.35; margin-bottom: 0.2rem;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden; word-break: keep-all;
+    }
+    .watch-card .watch-meta {
+        color: #666; font-size: 0.76rem; line-height: 1.3;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .watch-card .watch-rank {
+        font-weight: 700; color: #03C75A; font-size: 1rem; margin-top: 0.35rem;
+    }
+    .watch-card .watch-changed {
+        color: #b8860b; font-weight: 600; font-size: 0.74rem; margin-top: 0.15rem;
+    }
+    .watch-card .watch-updated {
+        color: #888; font-size: 0.68rem; margin-top: 0.2rem;
+    }
     .watch-row.changed { background: #fffbe6; border-color: #f0d96b; }
     .watch-name { font-weight: 600; color: #222; }
     .watch-meta { color: #666; font-size: 0.9rem; }
@@ -69,6 +95,7 @@ PENDING_KEYWORD_KEY = "pending_keyword"
 PENDING_MAX_RANK_KEY = "pending_max_rank"
 SEARCH_QUERY_KEY = "place_search_query"
 MANUAL_URL_KEY = "manual_url_expanded"
+ITEMS_PER_ROW = 5
 
 
 def _get_watchlist() -> list[WatchlistItem] | None:
@@ -319,30 +346,40 @@ def render_candidate_picker(store: SupabaseStore, member: MemberSession) -> None
             st.rerun()
 
 
-def render_item(item: WatchlistItem, member: MemberSession) -> None:
+def render_item_card(item: WatchlistItem, member: MemberSession) -> None:
     pending = item.rank is None and not item.updated_at
-    row_class = "watch-row changed" if item.changed else "watch-row"
+    row_class = "watch-card changed" if item.changed else "watch-card"
     change_text = format_change(item)
     rank_text = format_rank(item.rank, item.found, member.max_rank, pending=pending)
 
-    c_del, c_body = st.columns([0.08, 0.92])
-    with c_del:
-        if st.button("✕", key=f"del_{item.id}", help="등록 해제"):
-            _store().delete_item(member.id, item.id)
-            _set_watchlist(load_items(member.id))
-            st.rerun()
-    with c_body:
-        st.markdown(f'<div class="{row_class}">', unsafe_allow_html=True)
+    if st.button("✕", key=f"del_{item.id}", help="등록 해제"):
+        _store().delete_item(member.id, item.id)
+        _set_watchlist(load_items(member.id))
+        st.rerun()
+
+    st.markdown(f'<div class="{row_class}">', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="watch-name">{item.place_name}</div>'
+        f'<div class="watch-meta">키워드: {item.keyword}</div>'
+        f'<div class="watch-rank">{rank_text}</div>'
+        + (f'<div class="watch-changed">✓ {change_text}</div>' if change_text else ""),
+        unsafe_allow_html=True,
+    )
+    if item.updated_at:
         st.markdown(
-            f'<div class="watch-name">{item.place_name}</div>'
-            f'<div class="watch-meta">키워드: {item.keyword}</div>'
-            f'<div class="watch-rank">{rank_text}</div>'
-            + (f'<div class="watch-changed">✓ {change_text}</div>' if change_text else ""),
+            f'<div class="watch-updated">갱신: {item.updated_at}</div>',
             unsafe_allow_html=True,
         )
-        if item.updated_at:
-            st.caption(f"갱신: {item.updated_at}")
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+def render_items_grid(items: list[WatchlistItem], member: MemberSession) -> None:
+    for row_start in range(0, len(items), ITEMS_PER_ROW):
+        row_items = items[row_start : row_start + ITEMS_PER_ROW]
+        columns = st.columns(ITEMS_PER_ROW)
+        for column, item in zip(columns, row_items):
+            with column:
+                render_item_card(item, member)
 
 
 @st.fragment(run_every=timedelta(minutes=5))
@@ -366,7 +403,7 @@ def on_max_rank_change() -> None:
 def render_dashboard(member: MemberSession) -> None:
     items: list[WatchlistItem] = ensure_items(member.id)
     store = _store()
-    left, right = st.columns([2, 3])
+    left, right = st.columns([2, 5])
 
     with left:
         st.subheader("등록 / 조회")
@@ -481,8 +518,7 @@ def render_dashboard(member: MemberSession) -> None:
             latest = max((i.updated_at for i in items if i.updated_at), default=None)
             if latest:
                 st.caption(f"마지막 순위 갱신: {latest}")
-            for item in items:
-                render_item(item, member)
+            render_items_grid(items, member)
 
 
 member = require_member(extra_session_keys=PLACE_SESSION_KEYS)
