@@ -38,32 +38,16 @@ st.markdown(
         padding: 1rem 1.25rem; margin: 0.75rem 0;
     }
     .rank-number { font-size: 2.2rem; font-weight: 800; color: #03C75A; }
-    .watch-card {
+    .watch-row {
         border: 1px solid #e8ece9; border-radius: 10px;
-        padding: 0.55rem 0.6rem 0.65rem; margin-bottom: 0.65rem;
-        background: #fff; min-height: 132px;
+        padding: 0.65rem 0.75rem; margin-bottom: 0; background: #fff;
     }
-    .watch-card.changed { background: #fffbe6; border-color: #f0d96b; }
-    .watch-card .watch-name {
-        font-weight: 600; color: #222; font-size: 0.88rem;
-        line-height: 1.35; margin-bottom: 0.2rem;
-        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-        overflow: hidden; word-break: keep-all;
-    }
-    .watch-card .watch-meta {
-        color: #666; font-size: 0.76rem; line-height: 1.3;
-        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .watch-card .watch-rank {
-        font-weight: 700; color: #03C75A; font-size: 1rem; margin-top: 0.35rem;
-    }
-    .watch-card .watch-changed {
-        color: #b8860b; font-weight: 600; font-size: 0.74rem; margin-top: 0.15rem;
-    }
-    .watch-card .watch-updated {
-        color: #888; font-size: 0.68rem; margin-top: 0.2rem;
-    }
+    .watch-row.changed { background: #fffbe6; border-color: #f0d96b; }
+    .watch-name { font-weight: 600; color: #222; }
+    .watch-meta { color: #666; font-size: 0.9rem; }
+    .watch-rank { font-weight: 700; color: #03C75A; font-size: 1.05rem; }
+    .watch-changed { color: #b8860b; font-weight: 600; font-size: 0.85rem; }
+    .watch-grid-cell { margin-bottom: 0.5rem; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -165,28 +149,29 @@ def lookup_registered_item(
 
 def render_item_card(item: WatchlistItem, member: MemberSession) -> None:
     pending = item.rank is None and not item.updated_at
-    row_class = "watch-card changed" if item.changed else "watch-card"
+    row_class = "watch-row changed" if item.changed else "watch-row"
     change_text = format_change(item)
     rank_text = format_rank(item.rank, item.found, member.max_rank, pending=pending)
 
-    if st.button("✕", key=f"del_{item.id}", help="등록 해제"):
-        _store().delete_item(member.id, item.id)
-        _set_watchlist(load_items(member.id))
-        st.rerun()
-
-    st.markdown(f'<div class="{row_class}">', unsafe_allow_html=True)
-    st.markdown(
-        f'<div class="watch-name">{item.place_name}</div>'
-        f'<div class="watch-meta">키워드: {item.keyword}</div>'
-        f'<div class="watch-rank">{rank_text}</div>'
-        + (f'<div class="watch-changed">✓ {change_text}</div>' if change_text else ""),
-        unsafe_allow_html=True,
-    )
-    if item.updated_at:
+    st.markdown('<div class="watch-grid-cell">', unsafe_allow_html=True)
+    c_del, c_body = st.columns([0.08, 0.92])
+    with c_del:
+        if st.button("✕", key=f"del_{item.id}", help="등록 해제"):
+            _store().delete_item(member.id, item.id)
+            _set_watchlist(load_items(member.id))
+            st.rerun()
+    with c_body:
+        st.markdown(f'<div class="{row_class}">', unsafe_allow_html=True)
         st.markdown(
-            f'<div class="watch-updated">갱신: {item.updated_at}</div>',
+            f'<div class="watch-name">{item.place_name}</div>'
+            f'<div class="watch-meta">키워드: {item.keyword}</div>'
+            f'<div class="watch-rank">{rank_text}</div>'
+            + (f'<div class="watch-changed">✓ {change_text}</div>' if change_text else ""),
             unsafe_allow_html=True,
         )
+        if item.updated_at:
+            st.caption(f"갱신: {item.updated_at}")
+        st.markdown("</div>", unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
 
@@ -287,7 +272,7 @@ def render_dashboard(member: MemberSession) -> None:
                 _set_watchlist(load_items(member.id))
                 st.rerun()
         with col_refresh:
-            if st.button("갱신 안내", key="refresh_info", use_container_width=True):
+            if st.button("지금 전체 갱신", key="refresh_info", use_container_width=True):
                 st.info(
                     "전체 순위 갱신은 GitHub Actions → **Supabase Rank Monitor** → "
                     "**Run workflow** 로 실행합니다. 완료 후 [목록 새로고침]을 눌러 주세요."
